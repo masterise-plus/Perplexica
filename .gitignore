@@ -39,3 +39,7 @@ db.sqlite
 /searxng
 
 certificates
+
+# Lock files
+package-lock.json
+yarn.lock

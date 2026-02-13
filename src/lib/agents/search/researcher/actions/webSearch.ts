@@ -1,6 +1,6 @@
 import z from 'zod';
 import { ResearchAction } from '../../types';
-import { searchSearxng } from '@/lib/searxng';
+import { searchTavily } from '@/lib/tavily';
 import { Chunk, SearchResultsResearchBlock } from '@/lib/types';
 
 const actionSchema = z.object({
@@ -113,7 +113,7 @@ const webSearchAction: ResearchAction<typeof actionSchema> = {
     let results: Chunk[] = [];
 
     const search = async (q: string) => {
-      const res = await searchSearxng(q);
+      const res = await searchTavily(q);
 
       const resultChunks: Chunk[] = res.results.map((r) => ({
         content: r.content || r.title,

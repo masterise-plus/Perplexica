@@ -1,4 +1,4 @@
-import { searchSearxng } from '@/lib/searxng';
+import { searchTavily } from '@/lib/tavily';
 
 const websitesForTopic = {
   tech: {
@@ -45,10 +45,9 @@ export const GET = async (req: Request) => {
           selectedTopic.links.flatMap((link) =>
             selectedTopic.query.map(async (query) => {
               return (
-                await searchSearxng(`site:${link} ${query}`, {
-                  engines: ['bing news'],
-                  pageno: 1,
-                  language: 'en',
+                await searchTavily(`site:${link} ${query}`, {
+                  topic: 'news',
+                  includeDomains: [link],
                 })
               ).results;
             }),
@@ -65,12 +64,11 @@ export const GET = async (req: Request) => {
         .sort(() => Math.random() - 0.5);
     } else {
       data = (
-        await searchSearxng(
+        await searchTavily(
           `site:${selectedTopic.links[Math.floor(Math.random() * selectedTopic.links.length)]} ${selectedTopic.query[Math.floor(Math.random() * selectedTopic.query.length)]}`,
           {
-            engines: ['bing news'],
-            pageno: 1,
-            language: 'en',
+            topic: 'news',
+            includeDomains: [selectedTopic.links[Math.floor(Math.random() * selectedTopic.links.length)]],
           },
         )
       ).results;

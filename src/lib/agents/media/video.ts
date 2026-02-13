@@ -1,5 +1,5 @@
 import formatChatHistoryAsString from '@/lib/utils/formatHistory';
-import { searchSearxng } from '@/lib/searxng';
+import { searchTavily } from '@/lib/tavily';
 import {
   videoSearchFewShots,
   videoSearchPrompt,
@@ -43,20 +43,26 @@ const searchVideos = async (
     schema: schema,
   });
 
-  const searchRes = await searchSearxng(res.query, {
-    engines: ['youtube'],
+  const searchRes = await searchTavily(res.query, {
+    includeDomains: ['youtube.com'],
   });
 
   const videos: VideoSearchResult[] = [];
 
   searchRes.results.forEach((result) => {
-    if (result.thumbnail && result.url && result.title && result.iframe_src) {
-      videos.push({
-        img_src: result.thumbnail,
-        url: result.url,
-        title: result.title,
-        iframe_src: result.iframe_src,
-      });
+    if (result.url && result.title) {
+      // Extract YouTube video ID from URL
+      const videoIdMatch = result.url.match(/(?:v=|\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      const videoId = videoIdMatch ? videoIdMatch[1] : null;
+
+      if (videoId) {
+        videos.push({
+          img_src: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+          url: result.url,
+          title: result.title,
+          iframe_src: `https://www.youtube.com/embed/${videoId}`,
+        });
+      }
     }
   });
 
