@@ -17,16 +17,19 @@ const sourcesList = [
     name: 'Web',
     key: 'web',
     icon: <GlobeIcon className="h-[16px] w-auto" />,
+    disabled: false,
   },
   {
     name: 'Academic',
     key: 'academic',
     icon: <GraduationCapIcon className="h-[16px] w-auto" />,
+    disabled: true,
   },
   {
     name: 'Social',
     key: 'discussions',
     icon: <NetworkIcon className="h-[16px] w-auto" />,
+    disabled: true,
   },
 ];
 
@@ -56,8 +59,13 @@ const Sources = () => {
                   {sourcesList.map((source, i) => (
                     <div
                       key={i}
-                      className="flex flex-row justify-between hover:bg-light-100 hover:dark:bg-dark-100 rounded-md py-3 px-2 cursor-pointer"
+                      className={`relative group flex flex-row justify-between rounded-md py-3 px-2 ${
+                        source.disabled
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'hover:bg-light-100 hover:dark:bg-dark-100 cursor-pointer'
+                      }`}
                       onClick={() => {
+                        if (source.disabled) return;
                         if (!sources.includes(source.key)) {
                           setSources([...sources, source.key]);
                         } else {
@@ -71,6 +79,7 @@ const Sources = () => {
                       </div>
                       <Switch
                         checked={sources.includes(source.key)}
+                        disabled={source.disabled}
                         className="group relative flex h-4 w-7 shrink-0 cursor-pointer rounded-full bg-light-200 dark:bg-white/10 p-0.5 duration-200 ease-in-out focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed data-[checked]:bg-sky-500 dark:data-[checked]:bg-sky-500"
                       >
                         <span
@@ -78,6 +87,11 @@ const Sources = () => {
                           className="pointer-events-none inline-block size-3 translate-x-[1px] group-data-[checked]:translate-x-3 rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
                         />
                       </Switch>
+                      {source.disabled && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-[10px] font-medium text-white bg-black/80 dark:bg-white/90 dark:text-black rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
+                          Coming Soon
+                        </div>
+                      )}
                     </div>
                   ))}
                 </motion.div>
