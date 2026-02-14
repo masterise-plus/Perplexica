@@ -470,7 +470,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const prevParamsChatIdRef = useRef<string | undefined>(params.chatId);
+
   useEffect(() => {
+    const prevParamsChatId = prevParamsChatIdRef.current;
+    prevParamsChatIdRef.current = params.chatId;
+
     if (params.chatId && params.chatId !== chatId) {
       setChatId(params.chatId);
       setMessages([]);
@@ -480,8 +485,21 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       setIsMessagesLoaded(false);
       setNotFound(false);
       setNewChatCreated(false);
+    } else if (!params.chatId && prevParamsChatId) {
+      // User navigated from /c/[chatId] to "/" (new chat)
+      setMessages([]);
+      chatHistory.current = [];
+      setFiles([]);
+      setFileIds([]);
+      setNotFound(false);
+      setLoading(false);
+      setMessageAppeared(false);
+      setResearchEnded(false);
+      setNewChatCreated(true);
+      setIsMessagesLoaded(true);
+      setChatId(crypto.randomBytes(20).toString('hex'));
     }
-  }, [params.chatId, chatId]);
+  }, [params.chatId]);
 
   useEffect(() => {
     if (
@@ -666,7 +684,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
         const autoMediaSearch = getAutoMediaSearch();
 
-        if (autoMediaSearch) {
+        if (autoMediaSearch && lastMsg) {
           setTimeout(() => {
             document
               .getElementById(`search-images-${lastMsg.messageId}`)
