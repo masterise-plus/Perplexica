@@ -11,8 +11,20 @@ class KeyRotator {
 
   private keys: string[];
   private currentIndex: number = 0;
+  /** Pre-computed sorted key hash for fast equality checks */
+  private keyHash: string;
   /** Timestamp (ms) until which each key is on cooldown */
   private cooldownUntil: Map<string, number> = new Map();
+
+  /** Parse and normalize a key string into a sorted hash for comparison */
+  private static computeKeyHash(apiKeyString: string): string {
+    return apiKeyString
+      .split(',')
+      .map((k) => k.trim())
+      .filter((k) => k.length > 0)
+      .sort()
+      .join(',');
+  }
 
   private constructor(apiKeyString: string) {
     this.keys = apiKeyString
@@ -23,6 +35,8 @@ class KeyRotator {
     if (this.keys.length === 0) {
       throw new Error('At least one API key must be provided');
     }
+
+    this.keyHash = KeyRotator.computeKeyHash(apiKeyString);
   }
 
   /**
@@ -32,17 +46,10 @@ class KeyRotator {
   static getInstance(baseURL: string, apiKeyString: string): KeyRotator {
     const existing = KeyRotator.instances.get(baseURL);
 
-    // Reuse if the key set hasn't changed
+    // Reuse if the key set hasn't changed (O(1) hash compare)
     if (existing) {
-      const newKeys = apiKeyString
-        .split(',')
-        .map((k) => k.trim())
-        .filter((k) => k.length > 0)
-        .sort()
-        .join(',');
-      const oldKeys = [...existing.keys].sort().join(',');
-
-      if (newKeys === oldKeys) {
+      const newHash = KeyRotator.computeKeyHash(apiKeyString);
+      if (newHash === existing.keyHash) {
         return existing;
       }
     }

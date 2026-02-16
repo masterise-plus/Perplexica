@@ -139,15 +139,15 @@ class OpenAILLM extends BaseLLM<OpenAIConfig> {
           content: msg.content,
           ...(msg.tool_calls &&
             msg.tool_calls.length > 0 && {
-              tool_calls: msg.tool_calls?.map((tc) => ({
-                id: tc.id,
-                type: 'function',
-                function: {
-                  name: tc.name,
-                  arguments: JSON.stringify(tc.arguments),
-                },
-              })),
-            }),
+            tool_calls: msg.tool_calls?.map((tc) => ({
+              id: tc.id,
+              type: 'function',
+              function: {
+                name: tc.name,
+                arguments: JSON.stringify(tc.arguments),
+              },
+            })),
+          }),
         } as ChatCompletionAssistantMessageParam;
       }
 
@@ -175,10 +175,6 @@ class OpenAILLM extends BaseLLM<OpenAIConfig> {
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const { client, apiKey } = this.createClient();
-      const cooldown = this.keyRotator.getCooldownRemaining(apiKey);
-      if (cooldown > 0) {
-        await this.sleep(Math.min(cooldown, 15_000));
-      }
 
       try {
         const response = await client.chat.completions.create({
@@ -265,10 +261,6 @@ class OpenAILLM extends BaseLLM<OpenAIConfig> {
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const { client, apiKey } = this.createClient();
-      const cooldown = this.keyRotator.getCooldownRemaining(apiKey);
-      if (cooldown > 0) {
-        await this.sleep(Math.min(cooldown, 15_000));
-      }
 
       try {
         const stream = await client.chat.completions.create({
@@ -361,10 +353,6 @@ class OpenAILLM extends BaseLLM<OpenAIConfig> {
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const { client, apiKey } = this.createClient();
-      const cooldown = this.keyRotator.getCooldownRemaining(apiKey);
-      if (cooldown > 0) {
-        await this.sleep(Math.min(cooldown, 15_000));
-      }
 
       try {
         const response = await client.chat.completions.parse({
@@ -431,10 +419,6 @@ class OpenAILLM extends BaseLLM<OpenAIConfig> {
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const { client, apiKey } = this.createClient();
-      const cooldown = this.keyRotator.getCooldownRemaining(apiKey);
-      if (cooldown > 0) {
-        await this.sleep(Math.min(cooldown, 15_000));
-      }
 
       try {
         let recievedObj: string = '';

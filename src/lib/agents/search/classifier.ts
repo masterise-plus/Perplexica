@@ -35,6 +35,7 @@ const schema = z.object({
 });
 
 export const classify = async (input: ClassifierInput) => {
+  console.time('[Perf] classify');
   const output = await input.llm.generateObject<typeof schema>({
     messages: [
       {
@@ -48,6 +49,7 @@ export const classify = async (input: ClassifierInput) => {
     ],
     schema,
   });
+  console.timeEnd('[Perf] classify');
 
   return output;
 };

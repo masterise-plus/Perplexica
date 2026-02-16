@@ -51,12 +51,16 @@ class SearchAgent {
         .execute();
     }
 
+    console.time('[Perf] searchAsync total');
+
     const classification = await classify({
       chatHistory: input.chatHistory,
       enabledSources: input.config.sources,
       query: input.followUp,
       llm: input.config.llm,
     });
+
+    console.time('[Perf] research + widgets');
 
     const widgetPromise = WidgetExecutor.executeAll({
       classification,
@@ -93,6 +97,8 @@ class SearchAgent {
       widgetPromise,
       searchPromise,
     ]);
+
+    console.timeEnd('[Perf] research + widgets');
 
     session.emit('data', {
       type: 'researchComplete',
@@ -180,6 +186,8 @@ class SearchAgent {
         ),
       )
       .execute();
+
+    console.timeEnd('[Perf] searchAsync total');
   }
 }
 

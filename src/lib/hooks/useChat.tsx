@@ -11,7 +11,7 @@ import {
   useState,
 } from 'react';
 import crypto from 'crypto';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { getSuggestions } from '../actions';
 import { MinimalProvider } from '../models/types';
@@ -256,19 +256,20 @@ export const chatContext = createContext<ChatContext>({
   chatModelProvider: { key: '', providerId: '' },
   embeddingModelProvider: { key: '', providerId: '' },
   researchEnded: false,
-  rewrite: () => {},
-  sendMessage: async () => {},
-  setFileIds: () => {},
-  setFiles: () => {},
-  setSources: () => {},
-  setOptimizationMode: () => {},
-  setChatModelProvider: () => {},
-  setEmbeddingModelProvider: () => {},
-  setResearchEnded: () => {},
+  rewrite: () => { },
+  sendMessage: async () => { },
+  setFileIds: () => { },
+  setFiles: () => { },
+  setSources: () => { },
+  setOptimizationMode: () => { },
+  setChatModelProvider: () => { },
+  setEmbeddingModelProvider: () => { },
+  setResearchEnded: () => { },
 });
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const params: { chatId: string } = useParams();
+  const router = useRouter();
 
   const searchParams = useSearchParams();
   const initialMessage = searchParams.get('q');
@@ -664,7 +665,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           [
             'assistant',
             currentMsg?.responseBlocks.find((b) => b.type === 'text')?.data ||
-              '',
+            '',
           ],
         ];
 
@@ -740,7 +741,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     setMessageAppeared(false);
 
     if (messages.length <= 1) {
-      window.history.replaceState(null, '', `/c/${chatId}`);
+      router.replace(`/c/${chatId}`);
     }
 
     messageId = messageId ?? crypto.randomBytes(7).toString('hex');
@@ -778,9 +779,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         optimizationMode: optimizationMode,
         history: rewrite
           ? chatHistory.current.slice(
-              0,
-              messageIndex === -1 ? undefined : messageIndex,
-            )
+            0,
+            messageIndex === -1 ? undefined : messageIndex,
+          )
           : chatHistory.current,
         chatModel: {
           key: chatModelProvider.key,
