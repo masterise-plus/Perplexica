@@ -53,8 +53,21 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div>
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-[72px] lg:flex-col border-r border-light-200 dark:border-dark-200">
-        <div className="flex grow flex-col items-center justify-between gap-y-5 overflow-y-auto bg-light-secondary dark:bg-dark-secondary px-2 py-8 shadow-sm shadow-light-200/10 dark:shadow-black/25">
+      {/* SVG filter for liquid glass refraction (available for inner elements) */}
+      <svg style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
+        <defs>
+          <filter id="liquid-glass-sidebar-filter">
+            <feTurbulence type="fractalNoise" baseFrequency="0.015 0.01" numOctaves={2} result="warp" />
+            <feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale={18} in="SourceGraphic" in2="warp" />
+            <feGaussianBlur stdDeviation={1.2} />
+          </filter>
+        </defs>
+      </svg>
+
+      <div
+        className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-[72px] lg:flex-col liquid-glass-sidebar"
+      >
+        <div className="relative z-10 flex grow flex-col items-center justify-between gap-y-5 overflow-y-auto px-2 py-8">
           <Link
             className="p-2.5 rounded-full bg-light-200 text-black/70 dark:bg-dark-200 dark:text-white/70 hover:opacity-70 hover:scale-105 tansition duration-200"
             href="/"
@@ -105,7 +118,9 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
         </div>
       </div>
 
-      <div className="fixed bottom-0 w-full z-50 flex flex-row items-center gap-x-6 bg-light-secondary dark:bg-dark-secondary px-4 py-4 shadow-sm lg:hidden">
+      <div
+        className="fixed bottom-0 w-full z-50 flex flex-row items-center gap-x-6 px-4 py-4 lg:hidden liquid-glass-mobile"
+      >
         {navLinks.map((link, i) => (
           <Link
             href={link.href}

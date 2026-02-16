@@ -90,6 +90,102 @@
   }
 }
 
+/* ── Liquid Glass Sidebar ─────────────────────────────── */
+@layer components {
+  .liquid-glass-sidebar {
+    position: relative;
+    overflow: hidden;
+    background: rgba(246, 248, 250, 0.55);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border-right: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow:
+      0 8px 32px 0 rgba(0, 0, 0, 0.06),
+      inset 0 0 0 0.5px rgba(255, 255, 255, 0.15);
+  }
+
+  /* Specular highlight overlay */
+  .liquid-glass-sidebar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.35) 0%,
+      rgba(255, 255, 255, 0.08) 40%,
+      rgba(255, 255, 255, 0) 70%
+    );
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 1;
+  }
+
+  /* Dark mode */
+  :is(.dark) .liquid-glass-sidebar {
+    background: rgba(13, 17, 23, 0.6);
+    backdrop-filter: blur(26px) saturate(160%);
+    -webkit-backdrop-filter: blur(26px) saturate(160%);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 8px 32px 0 rgba(0, 0, 0, 0.25),
+      inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  }
+
+  :is(.dark) .liquid-glass-sidebar::after {
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.03) 40%,
+      rgba(255, 255, 255, 0) 70%
+    );
+  }
+
+  /* Mobile bottom bar variant */
+  .liquid-glass-mobile {
+    position: relative;
+    overflow: hidden;
+    background: rgba(246, 248, 250, 0.6);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border-top: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow:
+      0 -4px 24px 0 rgba(0, 0, 0, 0.06),
+      inset 0 0 0 0.5px rgba(255, 255, 255, 0.15);
+  }
+
+  .liquid-glass-mobile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0) 60%
+    );
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 1;
+  }
+
+  :is(.dark) .liquid-glass-mobile {
+    background: rgba(13, 17, 23, 0.65);
+    backdrop-filter: blur(26px) saturate(160%);
+    -webkit-backdrop-filter: blur(26px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 -4px 24px 0 rgba(0, 0, 0, 0.3),
+      inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  }
+
+  :is(.dark) .liquid-glass-mobile::after {
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0) 60%
+    );
+  }
+}
+
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
   select,
   textarea,
