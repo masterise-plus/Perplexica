@@ -47,6 +47,8 @@ type ToolCall = {
   id: string;
   name: string;
   arguments: Record<string, any>;
+  thoughtSignature?: string;
+  rawModelParts?: any[];
 };
 
 type GenerateTextInput = {

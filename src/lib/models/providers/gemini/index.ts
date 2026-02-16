@@ -30,39 +30,13 @@ class GeminiProvider extends BaseModelProvider<GeminiConfig> {
   }
 
   async getDefaultModels(): Promise<ModelList> {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${this.config.apiKey}`,
+    const defaultEmbeddingModels: Model[] = [];
+    const defaultChatModels: Model[] = [
       {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-    const data = await res.json();
-
-    let defaultEmbeddingModels: Model[] = [];
-    let defaultChatModels: Model[] = [];
-
-    data.models.forEach((m: any) => {
-      if (
-        m.supportedGenerationMethods.some(
-          (genMethod: string) =>
-            genMethod === 'embedText' || genMethod === 'embedContent',
-        )
-      ) {
-        defaultEmbeddingModels.push({
-          key: m.name,
-          name: m.displayName,
-        });
-      } else if (m.supportedGenerationMethods.includes('generateContent')) {
-        defaultChatModels.push({
-          key: m.name,
-          name: m.displayName,
-        });
+        name: 'Gemini 3 Flash',
+        key: 'gemini-3-flash-preview',
       }
-    });
+    ];
 
     return {
       embedding: defaultEmbeddingModels,
@@ -97,7 +71,6 @@ class GeminiProvider extends BaseModelProvider<GeminiConfig> {
     return new GeminiLLM({
       apiKey: this.config.apiKey,
       model: key,
-      baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai',
     });
   }
 

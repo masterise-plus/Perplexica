@@ -18,6 +18,10 @@ const defaultChatModels: Model[] = [
   {
     name: 'GPT 04 Mini',
     key: 'accounts/fireworks/models/gpt-oss-120b'
+  },
+  {
+    name: 'GLM 5',
+    key: 'accounts/fireworks/models/glm-5'
   }
 ];
 

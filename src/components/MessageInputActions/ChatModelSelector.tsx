@@ -127,66 +127,52 @@ const ModelSelector = () => {
                           : 'No chat models configured'}
                       </div>
                     ) : (
-                      <div className="flex flex-col">
-                        {filteredProviders.map((provider, providerIndex) => (
-                          <div key={provider.id}>
-                            <div className="px-4 py-2.5 sticky top-0 bg-light-primary dark:bg-dark-primary border-b border-light-200/50 dark:border-dark-200/50">
-                              <p className="text-xs text-black/50 dark:text-white/50 uppercase tracking-wider">
-                                {provider.name}
-                              </p>
-                            </div>
-
-                            <div className="flex flex-col px-2 py-2 space-y-0.5">
-                              {provider.chatModels.map((model) => (
-                                <button
-                                  key={model.key}
-                                  onClick={() =>
-                                    handleModelSelect(provider.id, model.key)
-                                  }
-                                  type="button"
+                      <div className="flex flex-col px-2 py-2 space-y-0.5">
+                        {filteredProviders.map((provider) =>
+                          provider.chatModels.map((model) => (
+                            <button
+                              key={`${provider.id}-${model.key}`}
+                              onClick={() =>
+                                handleModelSelect(provider.id, model.key)
+                              }
+                              type="button"
+                              className={cn(
+                                'px-3 py-2 flex items-center justify-between text-start duration-200 cursor-pointer transition rounded-lg group',
+                                chatModelProvider?.providerId ===
+                                  provider.id &&
+                                  chatModelProvider?.key === model.key
+                                  ? 'bg-light-secondary dark:bg-dark-secondary'
+                                  : 'hover:bg-light-secondary dark:hover:bg-dark-secondary',
+                              )}
+                            >
+                              <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                                <Cpu
+                                  size={15}
                                   className={cn(
-                                    'px-3 py-2 flex items-center justify-between text-start duration-200 cursor-pointer transition rounded-lg group',
+                                    'shrink-0',
                                     chatModelProvider?.providerId ===
                                       provider.id &&
                                       chatModelProvider?.key === model.key
-                                      ? 'bg-light-secondary dark:bg-dark-secondary'
-                                      : 'hover:bg-light-secondary dark:hover:bg-dark-secondary',
+                                      ? 'text-sky-500'
+                                      : 'text-black/50 dark:text-white/50 group-hover:text-black/70 group-hover:dark:text-white/70',
+                                  )}
+                                />
+                                <p
+                                  className={cn(
+                                    'text-xs truncate',
+                                    chatModelProvider?.providerId ===
+                                      provider.id &&
+                                      chatModelProvider?.key === model.key
+                                      ? 'text-sky-500 font-medium'
+                                      : 'text-black/70 dark:text-white/70 group-hover:text-black dark:group-hover:text-white',
                                   )}
                                 >
-                                  <div className="flex items-center space-x-2.5 min-w-0 flex-1">
-                                    <Cpu
-                                      size={15}
-                                      className={cn(
-                                        'shrink-0',
-                                        chatModelProvider?.providerId ===
-                                          provider.id &&
-                                          chatModelProvider?.key === model.key
-                                          ? 'text-sky-500'
-                                          : 'text-black/50 dark:text-white/50 group-hover:text-black/70 group-hover:dark:text-white/70',
-                                      )}
-                                    />
-                                    <p
-                                      className={cn(
-                                        'text-xs truncate',
-                                        chatModelProvider?.providerId ===
-                                          provider.id &&
-                                          chatModelProvider?.key === model.key
-                                          ? 'text-sky-500 font-medium'
-                                          : 'text-black/70 dark:text-white/70 group-hover:text-black dark:group-hover:text-white',
-                                      )}
-                                    >
-                                      {model.name}
-                                    </p>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-
-                            {providerIndex < filteredProviders.length - 1 && (
-                              <div className="h-px bg-light-200 dark:bg-dark-200" />
-                            )}
-                          </div>
-                        ))}
+                                  {model.name}
+                                </p>
+                              </div>
+                            </button>
+                          )),
+                        )}
                       </div>
                     )}
                   </div>

@@ -48,7 +48,7 @@ const SetupWizard = ({
               >
                 Welcome to{' '}
                 <span className="text-[#24A0ED] italic font-['PP_Editorial']">
-                  Perplexica
+                  Akselia
                 </span>
               </motion.h2>
               <motion.p
