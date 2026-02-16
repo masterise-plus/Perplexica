@@ -65,9 +65,9 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
       </svg>
 
       <div
-        className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-[72px] lg:flex-col liquid-glass-sidebar"
+        className="hidden lg:fixed lg:z-50 lg:flex lg:w-[72px] lg:flex-col lg:top-1/2 lg:-translate-y-1/2 lg:left-3 liquid-glass-sidebar"
       >
-        <div className="relative z-10 flex grow flex-col items-center justify-between gap-y-5 overflow-y-auto px-2 py-8">
+        <div className="relative z-10 flex flex-col items-center justify-between gap-y-5 overflow-y-auto px-2 py-5">
           <Link
             className="p-2.5 rounded-full bg-light-200 text-black/70 dark:bg-dark-200 dark:text-white/70 hover:opacity-70 hover:scale-105 tansition duration-200"
             href="/"
@@ -88,8 +88,8 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
               >
                 <div
                   className={cn(
-                    link.active && 'bg-light-200 dark:bg-dark-200',
-                    'group rounded-lg hover:bg-light-200 hover:dark:bg-dark-200 transition duration-200',
+                    link.active && 'bg-light-200/60 dark:bg-dark-200/60',
+                    'group rounded-lg transition duration-200 liquid-glass-nav-item',
                   )}
                 >
                   <link.icon
