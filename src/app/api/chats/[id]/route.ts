@@ -1,6 +1,5 @@
 import db from '@/lib/db';
-import { chats, messages } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { api } from '../../../../../convex/_generated/api';
 
 export const GET = async (
   req: Request,
@@ -9,16 +8,16 @@ export const GET = async (
   try {
     const { id } = await params;
 
-    const chatExists = await db.query.chats.findFirst({
-      where: eq(chats.id, id),
+    const chatExists = await db.query(api.chats.getById, {
+      chatId: id,
     });
 
     if (!chatExists) {
       return Response.json({ message: 'Chat not found' }, { status: 404 });
     }
 
-    const chatMessages = await db.query.messages.findMany({
-      where: eq(messages.chatId, id),
+    const chatMessages = await db.query(api.messages.getByChatId, {
+      chatId: id,
     });
 
     return Response.json(
@@ -44,16 +43,15 @@ export const DELETE = async (
   try {
     const { id } = await params;
 
-    const chatExists = await db.query.chats.findFirst({
-      where: eq(chats.id, id),
+    const chatExists = await db.query(api.chats.getById, {
+      chatId: id,
     });
 
     if (!chatExists) {
       return Response.json({ message: 'Chat not found' }, { status: 404 });
     }
 
-    await db.delete(chats).where(eq(chats.id, id)).execute();
-    await db.delete(messages).where(eq(messages.chatId, id)).execute();
+    await db.mutation(api.chats.deleteById, { chatId: id });
 
     return Response.json(
       { message: 'Chat deleted successfully' },

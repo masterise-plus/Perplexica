@@ -163,6 +163,64 @@ If you prefer to build from source or need more control:
 
 See the [installation documentation](https://github.com/ItzCrazyKns/Perplexica/tree/master/docs/installation) for more information like updating, etc.
 
+### Database (Convex)
+
+Perplexica uses [Convex](https://convex.dev) as its cloud database for storing chat history and messages. Follow these steps to set it up:
+
+#### Initial Setup
+
+1. **Install dependencies** (if not already done):
+
+   ```bash
+   npm i
+   ```
+
+2. **Initialize your Convex project:**
+
+   ```bash
+   npx convex dev
+   ```
+
+   This will prompt you to log in with GitHub, create a project, and automatically add your `NEXT_PUBLIC_CONVEX_URL` to `.env.local`.
+
+3. **Keep `npx convex dev` running** in a separate terminal while developing. It syncs your backend functions and schema to the cloud.
+
+#### Migrating from SQLite
+
+If you have existing chat data in a local SQLite database (`data/db.sqlite`), you can migrate it to Convex:
+
+```bash
+# Set the Convex URL (check your .env.local for the value)
+# PowerShell:
+$env:NEXT_PUBLIC_CONVEX_URL="https://your-deployment.convex.cloud"; npx tsx src/lib/db/migrate.ts
+
+# Bash/macOS:
+NEXT_PUBLIC_CONVEX_URL="https://your-deployment.convex.cloud" npx tsx src/lib/db/migrate.ts
+```
+
+#### Schema
+
+The Convex database has two tables:
+
+| Table        | Fields                                                                               |
+| ------------ | ------------------------------------------------------------------------------------ |
+| **chats**    | `chatId`, `title`, `createdAt`, `sources`, `files`                                   |
+| **messages** | `messageId`, `chatId`, `backendId`, `query`, `createdAt`, `responseBlocks`, `status` |
+
+The schema is defined in `convex/schema.ts`, and the backend query/mutation functions are in `convex/chats.ts` and `convex/messages.ts`.
+
+#### Development Workflow
+
+When developing, run two terminals:
+
+```bash
+# Terminal 1: Convex backend (syncs schema & functions)
+npx convex dev
+
+# Terminal 2: Next.js frontend
+npm run dev
+```
+
 ### Troubleshooting
 
 #### Local OpenAI-API-Compliant Servers

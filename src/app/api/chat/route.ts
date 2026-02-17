@@ -6,8 +6,7 @@ import SessionManager from '@/lib/session';
 import { ChatTurnMessage } from '@/lib/types';
 import { SearchSources } from '@/lib/agents/search/types';
 import db from '@/lib/db';
-import { eq } from 'drizzle-orm';
-import { chats } from '@/lib/db/schema';
+import { api } from '../../../../convex/_generated/api';
 import UploadManager from '@/lib/uploads/manager';
 
 export const runtime = 'nodejs';
@@ -75,15 +74,13 @@ const ensureChatExists = async (input: {
   fileIds: string[];
 }) => {
   try {
-    const exists = await db.query.chats
-      .findFirst({
-        where: eq(chats.id, input.id),
-      })
-      .execute();
+    const exists = await db.query(api.chats.getById, {
+      chatId: input.id,
+    });
 
     if (!exists) {
-      await db.insert(chats).values({
-        id: input.id,
+      await db.mutation(api.chats.create, {
+        chatId: input.id,
         createdAt: new Date().toISOString(),
         sources: input.sources,
         title: input.query,

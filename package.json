@@ -24,6 +24,7 @@
     "axios": "^1.8.3",
     "better-sqlite3": "^11.9.1",
     "clsx": "^2.1.0",
+    "convex": "^1.31.7",
     "drizzle-orm": "^0.40.1",
     "js-tiktoken": "^1.0.21",
     "jspdf": "^3.0.4",

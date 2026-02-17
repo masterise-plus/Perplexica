@@ -5,21 +5,18 @@ import Researcher from './researcher';
 import { getWriterPrompt } from '@/lib/prompts/search/writer';
 import { WidgetExecutor } from './widgets';
 import db from '@/lib/db';
-import { chats, messages } from '@/lib/db/schema';
-import { and, eq, gt } from 'drizzle-orm';
+import { api } from '../../../../convex/_generated/api';
 import { TextBlock } from '@/lib/types';
 
 class SearchAgent {
   async searchAsync(session: SessionManager, input: SearchAgentInput) {
-    const exists = await db.query.messages.findFirst({
-      where: and(
-        eq(messages.chatId, input.chatId),
-        eq(messages.messageId, input.messageId),
-      ),
+    const exists = await db.query(api.messages.getByIds, {
+      chatId: input.chatId,
+      messageId: input.messageId,
     });
 
     if (!exists) {
-      await db.insert(messages).values({
+      await db.mutation(api.messages.create, {
         chatId: input.chatId,
         messageId: input.messageId,
         backendId: session.id,
@@ -29,26 +26,18 @@ class SearchAgent {
         responseBlocks: [],
       });
     } else {
-      await db
-        .delete(messages)
-        .where(
-          and(eq(messages.chatId, input.chatId), gt(messages.id, exists.id)),
-        )
-        .execute();
-      await db
-        .update(messages)
-        .set({
-          status: 'answering',
-          backendId: session.id,
-          responseBlocks: [],
-        })
-        .where(
-          and(
-            eq(messages.chatId, input.chatId),
-            eq(messages.messageId, input.messageId),
-          ),
-        )
-        .execute();
+      // Delete messages after this one and reset it
+      await db.mutation(api.messages.deleteAfter, {
+        chatId: input.chatId,
+        afterCreationTime: exists._creationTime,
+      });
+      await db.mutation(api.messages.update, {
+        chatId: input.chatId,
+        messageId: input.messageId,
+        status: 'answering',
+        backendId: session.id,
+        responseBlocks: [],
+      });
     }
 
     console.time('[Perf] searchAsync total');
@@ -173,19 +162,12 @@ class SearchAgent {
 
     session.emit('end', {});
 
-    await db
-      .update(messages)
-      .set({
-        status: 'completed',
-        responseBlocks: session.getAllBlocks(),
-      })
-      .where(
-        and(
-          eq(messages.chatId, input.chatId),
-          eq(messages.messageId, input.messageId),
-        ),
-      )
-      .execute();
+    await db.mutation(api.messages.update, {
+      chatId: input.chatId,
+      messageId: input.messageId,
+      status: 'completed',
+      responseBlocks: session.getAllBlocks(),
+    });
 
     console.timeEnd('[Perf] searchAsync total');
   }
