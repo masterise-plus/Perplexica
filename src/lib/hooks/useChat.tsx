@@ -659,13 +659,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           (msg) => msg.messageId === messageId,
         );
 
+        const textBlock = currentMsg?.responseBlocks.find(
+          (b): b is Block & { type: 'text' } => b.type === 'text',
+        );
         const newHistory: [string, string][] = [
           ...chatHistory.current,
           ['human', message.query],
           [
             'assistant',
-            currentMsg?.responseBlocks.find((b) => b.type === 'text')?.data ||
-            '',
+            textBlock?.data || '',
           ],
         ];
 
