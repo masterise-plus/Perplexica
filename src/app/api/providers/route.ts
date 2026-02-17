@@ -1,15 +1,26 @@
-import ModelRegistry from '@/lib/models/registry';
+import db from '@/lib/db';
+import { api } from '../../../../convex/_generated/api';
 import { NextRequest } from 'next/server';
+import { hashObj } from '@/lib/serverUtils';
+
+export const dynamic = 'force-dynamic';
 
 export const GET = async (req: Request) => {
   try {
-    const registry = new ModelRegistry();
+    const providers = await db.query(api.providers.list, {});
 
-    const activeProviders = await registry.getActiveProviders();
-
-    const filteredProviders = activeProviders.filter((p) => {
-      return !p.chatModels.some((m) => m.key === 'error');
-    });
+    // Transform to match expected format (providerId -> id)
+    const filteredProviders = providers
+      .filter((p: any) => {
+        // Filter out providers with error models
+        return !p.chatModels.some((m: any) => m.key === 'error');
+      })
+      .map((p: any) => ({
+        id: p.providerId,
+        name: p.name,
+        chatModels: p.chatModels,
+        embeddingModels: p.embeddingModels,
+      }));
 
     return Response.json(
       {
@@ -48,13 +59,30 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    const registry = new ModelRegistry();
+    const providerId = crypto.randomUUID();
+    const hash = hashObj(config);
 
-    const newProvider = await registry.addProvider(type, name, config);
+    await db.mutation(api.providers.create, {
+      providerId,
+      name,
+      type,
+      config,
+      chatModels: [],
+      embeddingModels: [],
+      hash,
+    });
 
     return Response.json(
       {
-        provider: newProvider,
+        provider: {
+          id: providerId,
+          name,
+          type,
+          config,
+          chatModels: [],
+          embeddingModels: [],
+          hash,
+        },
       },
       {
         status: 200,

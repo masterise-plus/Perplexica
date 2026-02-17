@@ -66,7 +66,11 @@ class OllamaProvider extends BaseModelProvider<OllamaConfig> {
 
   async getModelList(): Promise<ModelList> {
     const defaultModels = await this.getDefaultModels();
-    const configProvider = getConfiguredModelProviderById(this.id)!;
+    const configProvider = await getConfiguredModelProviderById(this.id);
+
+    if (!configProvider) {
+      return defaultModels;
+    }
 
     return {
       embedding: [

@@ -1,5 +1,7 @@
-import ModelRegistry from '@/lib/models/registry';
+import db from '@/lib/db';
+import { api } from '../../../../../convex/_generated/api';
 import { NextRequest } from 'next/server';
+import { hashObj } from '@/lib/serverUtils';
 
 export const DELETE = async (
   req: NextRequest,
@@ -19,8 +21,7 @@ export const DELETE = async (
       );
     }
 
-    const registry = new ModelRegistry();
-    await registry.removeProvider(id);
+    await db.mutation(api.providers.deleteById, { providerId: id });
 
     return Response.json(
       {
@@ -63,13 +64,26 @@ export const PATCH = async (
       );
     }
 
-    const registry = new ModelRegistry();
+    const hash = hashObj(config);
 
-    const updatedProvider = await registry.updateProvider(id, name, config);
+    const updatedProvider = await db.mutation(api.providers.update, {
+      providerId: id,
+      name,
+      config,
+      hash,
+    });
 
     return Response.json(
       {
-        provider: updatedProvider,
+        provider: {
+          id: updatedProvider.providerId,
+          name: updatedProvider.name,
+          type: updatedProvider.type,
+          config: updatedProvider.config,
+          chatModels: updatedProvider.chatModels,
+          embeddingModels: updatedProvider.embeddingModels,
+          hash: updatedProvider.hash,
+        },
       },
       {
         status: 200,

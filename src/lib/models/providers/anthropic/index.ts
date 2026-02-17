@@ -59,7 +59,11 @@ class AnthropicProvider extends BaseModelProvider<AnthropicConfig> {
 
   async getModelList(): Promise<ModelList> {
     const defaultModels = await this.getDefaultModels();
-    const configProvider = getConfiguredModelProviderById(this.id)!;
+    const configProvider = await getConfiguredModelProviderById(this.id);
+
+    if (!configProvider) {
+      return defaultModels;
+    }
 
     return {
       embedding: [],

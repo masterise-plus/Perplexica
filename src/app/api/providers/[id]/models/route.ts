@@ -1,4 +1,5 @@
-import ModelRegistry from '@/lib/models/registry';
+import db from '@/lib/db';
+import { api } from '../../../../../../convex/_generated/api';
 import { Model } from '@/lib/models/types';
 import { NextRequest } from 'next/server';
 
@@ -23,9 +24,14 @@ export const POST = async (
       );
     }
 
-    const registry = new ModelRegistry();
-
-    await registry.addProviderModel(id, body.type, body);
+    await db.mutation(api.providers.addModel, {
+      providerId: id,
+      type: body.type,
+      model: {
+        key: body.key,
+        name: body.name,
+      },
+    });
 
     return Response.json(
       {
@@ -68,13 +74,15 @@ export const DELETE = async (
       );
     }
 
-    const registry = new ModelRegistry();
-
-    await registry.removeProviderModel(id, body.type, body.key);
+    await db.mutation(api.providers.removeModel, {
+      providerId: id,
+      type: body.type,
+      modelKey: body.key,
+    });
 
     return Response.json(
       {
-        message: 'Model added successfully',
+        message: 'Model removed successfully',
       },
       {
         status: 200,

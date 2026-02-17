@@ -1,7 +1,8 @@
 import configManager from '@/lib/config';
-import ModelRegistry from '@/lib/models/registry';
 import { NextRequest, NextResponse } from 'next/server';
-import { ConfigModelProvider } from '@/lib/config/types';
+import { getConfiguredModelProviders } from '@/lib/config/serverRegistry';
+
+export const dynamic = 'force-dynamic';
 
 type SaveConfigBody = {
   key: string;
@@ -12,22 +13,7 @@ export const GET = async (req: NextRequest) => {
   try {
     const values = configManager.getCurrentConfig();
     const fields = configManager.getUIConfigSections();
-
-    const modelRegistry = new ModelRegistry();
-    const modelProviders = await modelRegistry.getActiveProviders();
-
-    values.modelProviders = values.modelProviders.map(
-      (mp: ConfigModelProvider) => {
-        const activeProvider = modelProviders.find((p) => p.id === mp.id);
-
-        return {
-          ...mp,
-          chatModels: activeProvider?.chatModels ?? mp.chatModels,
-          embeddingModels:
-            activeProvider?.embeddingModels ?? mp.embeddingModels,
-        };
-      },
-    );
+    values.modelProviders = await getConfiguredModelProviders();
 
     return NextResponse.json({
       values,

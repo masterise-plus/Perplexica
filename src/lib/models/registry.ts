@@ -1,28 +1,34 @@
+import db from '@/lib/db';
+import { api } from '../../../convex/_generated/api';
 import { ConfigModelProvider } from '../config/types';
 import BaseModelProvider, { createProviderInstance } from './base/provider';
 import { getConfiguredModelProviders } from '../config/serverRegistry';
+import { hashObj } from '../serverUtils';
 import { providers } from './providers';
-import { MinimalProvider, ModelList } from './types';
-import configManager from '../config';
+import { MinimalProvider, Model, ModelList } from './types';
+
+type ActiveProvider = ConfigModelProvider & {
+  provider: BaseModelProvider<any>;
+};
 
 class ModelRegistry {
-  activeProviders: (ConfigModelProvider & {
-    provider: BaseModelProvider<any>;
-  })[] = [];
+  private activeProviders: ActiveProvider[] = [];
+  private readonly initializationPromise: Promise<void>;
 
   constructor() {
-    this.initializeActiveProviders();
+    this.initializationPromise = this.initializeActiveProviders();
   }
 
-  private initializeActiveProviders() {
-    const configuredProviders = getConfiguredModelProviders();
+  private async initializeActiveProviders() {
+    const configuredProviders = await getConfiguredModelProviders();
+    const initializedProviders: ActiveProvider[] = [];
 
     configuredProviders.forEach((p) => {
       try {
         const provider = providers[p.type];
         if (!provider) throw new Error('Invalid provider type');
 
-        this.activeProviders.push({
+        initializedProviders.push({
           ...p,
           provider: createProviderInstance(provider, p.id, p.name, p.config),
         });
@@ -32,10 +38,17 @@ class ModelRegistry {
         );
       }
     });
+
+    this.activeProviders = initializedProviders;
+  }
+
+  private async ensureInitialized() {
+    await this.initializationPromise;
   }
 
   async getActiveProviders() {
-    const providers: MinimalProvider[] = [];
+    await this.ensureInitialized();
+    const activeProviders: MinimalProvider[] = [];
 
     await Promise.all(
       this.activeProviders.map(async (p) => {
@@ -59,7 +72,7 @@ class ModelRegistry {
           };
         }
 
-        providers.push({
+        activeProviders.push({
           id: p.id,
           name: p.name,
           chatModels: m.chat,
@@ -68,10 +81,11 @@ class ModelRegistry {
       }),
     );
 
-    return providers;
+    return activeProviders;
   }
 
   async loadChatModel(providerId: string, modelName: string) {
+    await this.ensureInitialized();
     const provider = this.activeProviders.find((p) => p.id === providerId);
 
     if (!provider) throw new Error('Invalid provider id');
@@ -82,6 +96,7 @@ class ModelRegistry {
   }
 
   async loadEmbeddingModel(providerId: string, modelName: string) {
+    await this.ensureInitialized();
     const provider = this.activeProviders.find((p) => p.id === providerId);
 
     if (!provider) throw new Error('Invalid provider id');
@@ -96,10 +111,29 @@ class ModelRegistry {
     name: string,
     config: Record<string, any>,
   ): Promise<ConfigModelProvider> {
+    await this.ensureInitialized();
     const provider = providers[type];
     if (!provider) throw new Error('Invalid provider type');
 
-    const newProvider = configManager.addModelProvider(type, name, config);
+    const newProvider: ConfigModelProvider = {
+      id: crypto.randomUUID(),
+      name,
+      type,
+      config,
+      chatModels: [],
+      embeddingModels: [],
+      hash: hashObj(config),
+    };
+
+    await db.mutation(api.providers.create, {
+      providerId: newProvider.id,
+      name: newProvider.name,
+      type: newProvider.type,
+      config: newProvider.config,
+      chatModels: [],
+      embeddingModels: [],
+      hash: newProvider.hash,
+    });
 
     const instance = createProviderInstance(
       provider,
@@ -108,40 +142,18 @@ class ModelRegistry {
       newProvider.config,
     );
 
-    let m: ModelList = { chat: [], embedding: [] };
-
-    try {
-      m = await instance.getModelList();
-    } catch (err: any) {
-      console.error(
-        `Failed to get model list for newly added provider. Type: ${type}, ID: ${newProvider.id}, Error: ${err.message}`,
-      );
-
-      m = {
-        chat: [
-          {
-            key: 'error',
-            name: err.message,
-          },
-        ],
-        embedding: [],
-      };
-    }
-
     this.activeProviders.push({
       ...newProvider,
       provider: instance,
     });
 
-    return {
-      ...newProvider,
-      chatModels: m.chat || [],
-      embeddingModels: m.embedding || [],
-    };
+    return newProvider;
   }
 
   async removeProvider(providerId: string): Promise<void> {
-    configManager.removeModelProvider(providerId);
+    await this.ensureInitialized();
+    await db.mutation(api.providers.deleteById, { providerId });
+
     this.activeProviders = this.activeProviders.filter(
       (p) => p.id !== providerId,
     );
@@ -154,57 +166,90 @@ class ModelRegistry {
     name: string,
     config: any,
   ): Promise<ConfigModelProvider> {
-    const updated = await configManager.updateModelProvider(
+    await this.ensureInitialized();
+
+    const updated = await db.mutation(api.providers.update, {
       providerId,
       name,
       config,
-    );
-    const instance = createProviderInstance(
-      providers[updated.type],
-      providerId,
-      name,
-      config,
-    );
-
-    let m: ModelList = { chat: [], embedding: [] };
-
-    try {
-      m = await instance.getModelList();
-    } catch (err: any) {
-      console.error(
-        `Failed to get model list for updated provider. Type: ${updated.type}, ID: ${updated.id}, Error: ${err.message}`,
-      );
-
-      m = {
-        chat: [
-          {
-            key: 'error',
-            name: err.message,
-          },
-        ],
-        embedding: [],
-      };
-    }
-
-    this.activeProviders.push({
-      ...updated,
-      provider: instance,
+      hash: hashObj(config),
     });
 
-    return {
-      ...updated,
-      chatModels: m.chat || [],
-      embeddingModels: m.embedding || [],
+    const updatedProvider: ConfigModelProvider = {
+      id: updated.providerId,
+      name: updated.name,
+      type: updated.type,
+      config: updated.config,
+      chatModels: updated.chatModels,
+      embeddingModels: updated.embeddingModels,
+      hash: updated.hash,
     };
+
+    const providerConstructor = providers[updatedProvider.type];
+    if (!providerConstructor) throw new Error('Invalid provider type');
+
+    const instance = createProviderInstance(
+      providerConstructor,
+      providerId,
+      name,
+      config,
+    );
+
+    let replaced = false;
+    this.activeProviders = this.activeProviders.map((provider) => {
+      if (provider.id !== providerId) return provider;
+      replaced = true;
+      return {
+        ...updatedProvider,
+        provider: instance,
+      };
+    });
+
+    if (!replaced) {
+      this.activeProviders.push({
+        ...updatedProvider,
+        provider: instance,
+      });
+    }
+
+    return updatedProvider;
   }
 
   /* Using async here because maybe in the future we might want to add some validation?? */
   async addProviderModel(
     providerId: string,
     type: 'embedding' | 'chat',
-    model: any,
+    model: Model & { type?: 'embedding' | 'chat' },
   ): Promise<any> {
-    const addedModel = configManager.addProviderModel(providerId, type, model);
+    await this.ensureInitialized();
+
+    const addedModel = {
+      name: model.name,
+      key: model.key,
+    };
+
+    await db.mutation(api.providers.addModel, {
+      providerId,
+      type,
+      model: addedModel,
+    });
+
+    this.activeProviders = this.activeProviders.map((provider) => {
+      if (provider.id !== providerId) return provider;
+
+      if (type === 'chat') {
+        return {
+          ...provider,
+          chatModels: [...provider.chatModels, addedModel],
+        };
+      }
+
+      return {
+        ...provider,
+        embeddingModels: [...provider.embeddingModels, addedModel],
+      };
+    });
+
     return addedModel;
   }
 
@@ -213,7 +258,32 @@ class ModelRegistry {
     type: 'embedding' | 'chat',
     modelKey: string,
   ): Promise<void> {
-    configManager.removeProviderModel(providerId, type, modelKey);
+    await this.ensureInitialized();
+
+    await db.mutation(api.providers.removeModel, {
+      providerId,
+      type,
+      modelKey,
+    });
+
+    this.activeProviders = this.activeProviders.map((provider) => {
+      if (provider.id !== providerId) return provider;
+
+      if (type === 'chat') {
+        return {
+          ...provider,
+          chatModels: provider.chatModels.filter((m) => m.key !== modelKey),
+        };
+      }
+
+      return {
+        ...provider,
+        embeddingModels: provider.embeddingModels.filter(
+          (m) => m.key !== modelKey,
+        ),
+      };
+    });
+
     return;
   }
 }
