@@ -18,6 +18,26 @@ import path from 'path';
 import fs from 'fs';
 
 async function migrate() {
+  // Load .env.local since this script runs outside Next.js
+  const envLocalPath = path.join(process.cwd(), '.env.local');
+  if (fs.existsSync(envLocalPath)) {
+    const envContent = fs.readFileSync(envLocalPath, 'utf-8');
+    for (const line of envContent.split('\n')) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#')) {
+        const eqIndex = trimmed.indexOf('=');
+        if (eqIndex !== -1) {
+          const key = trimmed.substring(0, eqIndex).trim();
+          const value = trimmed.substring(eqIndex + 1).trim();
+          if (!process.env[key]) {
+            process.env[key] = value;
+          }
+        }
+      }
+    }
+    console.log('Loaded environment variables from .env.local');
+  }
+
   const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL;
 
   if (!CONVEX_URL) {

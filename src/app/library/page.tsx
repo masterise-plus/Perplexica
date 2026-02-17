@@ -111,16 +111,16 @@ const Page = () => {
                   ? null
                   : chat.sources.length <= 2
                     ? chat.sources
-                        .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-                        .join(', ')
+                      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+                      .join(', ')
                     : `${chat.sources
-                        .slice(0, 2)
-                        .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-                        .join(', ')} + ${chat.sources.length - 2}`;
+                      .slice(0, 2)
+                      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+                      .join(', ')} + ${chat.sources.length - 2}`;
 
               return (
                 <div
-                  key={chat.id}
+                  key={chat.id ?? `chat-${index}`}
                   className={
                     'group flex flex-col gap-2 p-4 hover:bg-light-secondary dark:hover:bg-dark-secondary transition-colors duration-200 ' +
                     (index !== chats.length - 1

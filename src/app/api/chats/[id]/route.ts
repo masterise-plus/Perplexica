@@ -20,10 +20,28 @@ export const GET = async (
       chatId: id,
     });
 
+    const mappedChat = {
+      id: chatExists.chatId,
+      title: chatExists.title,
+      createdAt: chatExists.createdAt,
+      sources: chatExists.sources ?? [],
+      files: chatExists.files ?? [],
+    };
+
+    const mappedMessages = chatMessages.map((msg: any) => ({
+      messageId: msg.messageId,
+      chatId: msg.chatId,
+      backendId: msg.backendId,
+      query: msg.query,
+      createdAt: msg.createdAt,
+      responseBlocks: msg.responseBlocks ?? [],
+      status: msg.status ?? 'completed',
+    }));
+
     return Response.json(
       {
-        chat: chatExists,
-        messages: chatMessages,
+        chat: mappedChat,
+        messages: mappedMessages,
       },
       { status: 200 },
     );

@@ -64,7 +64,7 @@ const Chat = () => {
         const isLast = i === sections.length - 1;
 
         return (
-          <Fragment key={section.message.messageId}>
+          <Fragment key={`${section.message.messageId}-${i}`}>
             <MessageBox
               section={section}
               sectionIndex={i}
